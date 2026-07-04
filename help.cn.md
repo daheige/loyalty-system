@@ -29,7 +29,7 @@
 
 依赖基础设施：**MySQL 8.0**、**Redis 7**、**Zookeeper**、**Kafka**（均通过 Docker Compose 启动）。
 
-**认证说明**：Auth 中间件仅校验 `Authorization: Bearer <token>` 请求头格式，不对 token 内容做实际鉴权，任意非空 token 均可通过。内部会将 `shop_id` 上下文设为 `"demo-shop"`。
+**认证说明**：所有 `/api/v1/*` 接口需 JWT（HS256）认证，**但** `POST /api/v1/members`（注册）和 `/api/v1/shopify/*`（OAuth）除外。JWT 必须携带 `shop_id` 声明。使用 `middleware.GenerateToken()` 生成 token。
 
 ---
 
@@ -192,12 +192,11 @@ curl http://localhost:8080/health
 
 ### 7.2 会员接口
 
-**注册会员：**
+**注册会员（无需认证）：**
 
 ```bash
 curl -s -X POST http://localhost:8080/api/v1/members \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer test-token" \
   -d '{
     "shop_id": "demo-shop.myshopify.com",
     "customer_id": "cust_001",
@@ -354,12 +353,12 @@ curl -s -X POST http://localhost:8080/webhooks/shopify/order-paid \
 
 ```bash
 BASE="http://localhost:8080"
-AUTH="Authorization: Bearer test-token"
+AUTH="Authorization: Bearer $TOKEN"   # JWT token，认证接口使用
 SHOP="demo-shop.myshopify.com"
 
-# 1. 注册会员
+# 1. 注册会员（无需认证）
 curl -s -X POST $BASE/api/v1/members \
-  -H "Content-Type: application/json" -H "$AUTH" \
+  -H "Content-Type: application/json" \
   -d "{\"shop_id\":\"$SHOP\",\"customer_id\":\"cust_e2e\",\"email\":\"e2e@test.com\"}" | jq
 
 # 响应中包含会员 ID，假设 id=1

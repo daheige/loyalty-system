@@ -31,12 +31,14 @@ func RegisterRoutes(
 		shopify.GET("/callback", shopifyHandler.AuthCallback)
 	}
 
+	// Register is a public endpoint — no JWT required. // Register 是公开接口，无需 JWT 认证
+	r.POST("/api/v1/members", memberHandler.Register)
+
 	api := r.Group("/api/v1")
 	api.Use(middleware.AuthMiddleware(jwtSecret))
 	{
 		members := api.Group("/members")
 		{
-			members.POST("", memberHandler.Register)
 			members.GET("", memberHandler.GetMember)
 			members.GET("/:id", memberHandler.GetMemberByID)
 			members.GET("/list", memberHandler.ListMembers)

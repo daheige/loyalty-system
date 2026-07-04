@@ -24,13 +24,31 @@
 
 ### 1.1 认证方式
 
-除健康检查、Shopify Webhook、Shopify OAuth 接口外，其余接口均需在请求头中携带：
+所有 `/api/v1/*` 接口（注册会员和 Shopify OAuth 除外）均需 JWT 认证：
 
 ```http
-Authorization: Bearer <token>
+Authorization: Bearer <jwt_token>
 ```
 
-> 当前中间件仅校验 `Authorization` 头格式，未对 token 做实际鉴权。
+JWT token 使用 `configs/config.yaml` 中配置的 `jwt.secret` 进行 **HS256** 签名。Token 中必须包含 `shop_id` 声明以标识租户。中间件校验项：签名（HMAC-SHA256）、过期时间、算法类型、`shop_id` 非空。
+
+**公开接口（无需认证）：**
+
+| 方法 | 路径 | 说明 |
+|--------|------|-------------|
+| `POST` | `/api/v1/members` | 注册新会员 |
+| `GET` | `/api/v1/shopify/auth` | 发起 Shopify OAuth 授权 |
+| `GET` | `/api/v1/shopify/callback` | Shopify OAuth 授权回调 |
+| `POST` | `/webhooks/shopify/order-paid` | Shopify 订单支付 Webhook |
+| `GET` | `/health` | 健康检查 |
+
+**Token 生成方式：**
+
+```go
+import "github.com/daheige/loyalty-system/internal/interfaces/middleware"
+
+token, _ := middleware.GenerateToken("your-jwt-secret-key", "demo-shop.myshopify.com", 24*time.Hour)
+```
 
 ### 1.2 统一响应格式
 
@@ -91,12 +109,12 @@ Authorization: Bearer <token>
 - **请求方法**：`POST`
 - **请求路径**：`/api/v1/members`
 - **Content-Type**：`application/json`
-- **接口说明**：根据 `shop_id` + `customer_id` 注册新会员，若已存在则返回冲突
+- **认证**：**无需认证** — 注册为公开接口
+- **接口说明**：根据 `shop_id` + `customer_id` 注册新会员，若已存在则返回 409 冲突
 
 **请求头**：
 
 ```http
-Authorization: Bearer <token>
 Content-Type: application/json
 ```
 
@@ -113,7 +131,6 @@ Content-Type: application/json
 ```http
 POST /api/v1/members
 Content-Type: application/json
-Authorization: Bearer test-token
 
 {
   "shop_id": "demo-shop.myshopify.com",

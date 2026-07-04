@@ -492,13 +492,15 @@ shopify:
 
 ### 8.0 Authentication
 
-All `/api/v1/*` endpoints require JWT authentication:
+All `/api/v1/*` endpoints (except Register Member and Shopify OAuth) require JWT authentication:
 
 ```http
 Authorization: Bearer <jwt_token>
 ```
 
 The JWT token is **HS256** signed using the `jwt.secret` configured in `configs/config.yaml`. The token must contain a `shop_id` claim identifying the tenant.
+
+**Public endpoints (no auth required):** `/api/v1/members` (POST), `/api/v1/shopify/*`, `/webhooks/*`, `/health`.
 
 **Token generation:**
 
@@ -512,12 +514,11 @@ The middleware validates: signature (HMAC-SHA256), token expiry, algorithm type,
 
 ### 8.1 Member APIs
 
-#### Register Member
+#### Register Member (Public — no auth required)
 
 ```http
 POST /api/v1/members
 Content-Type: application/json
-Authorization: Bearer <token>
 
 {
   "shop_id": "demo-shop.myshopify.com",

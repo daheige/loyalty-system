@@ -24,13 +24,31 @@
 
 ### 1.1 Authentication
 
-Except for health check, Shopify Webhook, and Shopify OAuth APIs, all other APIs must include the following header:
+All `/api/v1/*` endpoints (except Register Member and Shopify OAuth) require JWT authentication:
 
 ```http
-Authorization: Bearer <token>
+Authorization: Bearer <jwt_token>
 ```
 
-> The current middleware only validates the `Authorization` header format; it does not perform actual token authentication.
+The JWT token is **HS256** signed using the `jwt.secret` configured in `configs/config.yaml`. The token must contain a `shop_id` claim identifying the tenant. The middleware validates: signature (HMAC-SHA256), token expiry, algorithm type, and non-empty `shop_id`.
+
+**Public endpoints (no auth required):**
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/v1/members` | Register a new member |
+| `GET` | `/api/v1/shopify/auth` | Initiate Shopify OAuth |
+| `GET` | `/api/v1/shopify/callback` | Shopify OAuth callback |
+| `POST` | `/webhooks/shopify/order-paid` | Shopify order paid Webhook |
+| `GET` | `/health` | Health check |
+
+**Token generation:**
+
+```go
+import "github.com/daheige/loyalty-system/internal/interfaces/middleware"
+
+token, _ := middleware.GenerateToken("your-jwt-secret-key", "demo-shop.myshopify.com", 24*time.Hour)
+```
 
 ### 1.2 Unified Response Format
 
@@ -91,12 +109,12 @@ Authorization: Bearer <token>
 - **Method**: `POST`
 - **Path**: `/api/v1/members`
 - **Content-Type**: `application/json`
-- **Description**: Register a new member by `shop_id` + `customer_id`; returns conflict if already exists
+- **Auth**: **Not required** — this is a public registration endpoint
+- **Description**: Register a new member by `shop_id` + `customer_id`; returns 409 if already exists
 
 **Request Headers**:
 
 ```http
-Authorization: Bearer <token>
 Content-Type: application/json
 ```
 
@@ -113,7 +131,6 @@ Content-Type: application/json
 ```http
 POST /api/v1/members
 Content-Type: application/json
-Authorization: Bearer test-token
 
 {
   "shop_id": "demo-shop.myshopify.com",

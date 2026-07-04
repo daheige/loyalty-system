@@ -492,13 +492,15 @@ shopify:
 
 ### 8.0 认证说明
 
-所有 `/api/v1/*` 接口均需 JWT 认证：
+所有 `/api/v1/*` 接口（注册会员和 Shopify OAuth 除外）均需 JWT 认证：
 
 ```http
 Authorization: Bearer <jwt_token>
 ```
 
 JWT token 使用 `configs/config.yaml` 中配置的 `jwt.secret` 进行 **HS256** 签名。Token 中必须包含 `shop_id` 声明以标识租户。
+
+**公开接口（无需认证）：** `/api/v1/members`（POST）、`/api/v1/shopify/*`、`/webhooks/*`、`/health`。
 
 **Token 生成方式：**
 
@@ -512,12 +514,11 @@ token, _ := middleware.GenerateToken("your-jwt-secret-key", "demo-shop.myshopify
 
 ### 8.1 会员接口
 
-#### 注册会员
+#### 注册会员（公开接口 — 无需认证）
 
 ```http
 POST /api/v1/members
 Content-Type: application/json
-Authorization: Bearer <token>
 
 {
   "shop_id": "demo-shop.myshopify.com",

@@ -29,7 +29,7 @@ This project provides two independent binaries:
 
 Dependent infrastructure: **MySQL 8.0**, **Redis 7**, **Zookeeper**, **Kafka** (all via Docker Compose).
 
-**Auth note**: The auth middleware only validates the `Authorization: Bearer <token>` header format. Any non-empty token works — token content is not verified. It sets `shop_id` context to `"demo-shop"` internally.
+**Auth note**: All `/api/v1/*` endpoints require JWT (HS256) authentication, **except** `POST /api/v1/members` (registration) and `/api/v1/shopify/*` (OAuth). The JWT must carry a `shop_id` claim. See `middleware.GenerateToken()` for token creation.
 
 ---
 
@@ -192,12 +192,11 @@ curl http://localhost:8080/health
 
 ### 7.2 Members
 
-**Register a member:**
+**Register a member (no auth required):**
 
 ```bash
 curl -s -X POST http://localhost:8080/api/v1/members \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer test-token" \
   -d '{
     "shop_id": "demo-shop.myshopify.com",
     "customer_id": "cust_001",
@@ -354,12 +353,12 @@ Here's a complete scenario: register a member, earn points, check balance, check
 
 ```bash
 BASE="http://localhost:8080"
-AUTH="Authorization: Bearer test-token"
+AUTH="Authorization: Bearer $TOKEN"   # JWT token for authenticated endpoints
 SHOP="demo-shop.myshopify.com"
 
-# 1. Register
+# 1. Register (no auth required)
 curl -s -X POST $BASE/api/v1/members \
-  -H "Content-Type: application/json" -H "$AUTH" \
+  -H "Content-Type: application/json" \
   -d "{\"shop_id\":\"$SHOP\",\"customer_id\":\"cust_e2e\",\"email\":\"e2e@test.com\"}" | jq
 
 # Response includes member ID — let's say id=1
