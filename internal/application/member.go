@@ -47,7 +47,7 @@ func (s *memberService) Register(ctx context.Context, shopID, customerID, email 
 	}
 
 	if err := s.tierSvc.InitializeMemberTier(ctx, member.ID); err != nil {
-		// 记录日志但不影响注册
+		// Log the error but don't block registration. // 记录日志但不影响注册
 	}
 
 	now := time.Now()

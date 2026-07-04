@@ -17,7 +17,7 @@ import (
 	"github.com/daheige/loyalty-system/internal/infras/persistence"
 )
 
-// App 封装应用启动所需的核心依赖
+// App encapsulates the core dependencies required for application startup. // App 封装应用启动所需的核心依赖
 type App struct {
 	Config       *config.Config
 	Logger       *zap.Logger
@@ -33,7 +33,7 @@ type App struct {
 	EventHandler *application.EventService
 }
 
-// NewApp 初始化应用依赖
+// NewApp initializes application dependencies. // NewApp 初始化应用依赖
 func NewApp(configPath string) (*App, error) {
 	cfg, err := config.Load(configPath)
 	if err != nil {
@@ -92,7 +92,7 @@ func NewApp(configPath string) (*App, error) {
 	}, nil
 }
 
-// Close 优雅关闭应用依赖
+// Close gracefully shuts down application dependencies. // Close 优雅关闭应用依赖
 func (a *App) Close() {
 	if a.Broker != nil {
 		if err := a.Broker.Close(); err != nil {
@@ -104,7 +104,7 @@ func (a *App) Close() {
 	}
 }
 
-// StartConsumer 启动指定 Topic 的事件消费者
+// StartConsumer starts an event consumer for the specified topic. // StartConsumer 启动指定 Topic 的事件消费者
 func (a *App) StartConsumer(ctx context.Context, topic string) error {
 	return a.Broker.Subscribe(ctx, topic, func(ctx context.Context, msg broker.Message) error {
 		var event broker.Event

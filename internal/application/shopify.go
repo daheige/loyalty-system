@@ -7,13 +7,13 @@ import (
 	"github.com/daheige/loyalty-system/internal/infras/shopify"
 )
 
-// ShopifyService 提供 Shopify 平台相关能力
+// ShopifyService provides Shopify platform capabilities. // ShopifyService 提供 Shopify 平台相关能力
 type ShopifyService interface {
-	// BuildAuthURL 生成店铺授权安装链接
+	// BuildAuthURL generates a store authorization install URL. // BuildAuthURL 生成店铺授权安装链接
 	BuildAuthURL(shop, redirectURI, scopes, state string) string
-	// ExchangeAccessToken 用授权码换取 access_token
+	// ExchangeAccessToken exchanges an authorization code for an access_token. // ExchangeAccessToken 用授权码换取 access_token
 	ExchangeAccessToken(ctx context.Context, shop, code string) (string, error)
-	// VerifyCallbackHMAC 校验 OAuth 回调 HMAC 签名
+	// VerifyCallbackHMAC verifies the OAuth callback HMAC signature. // VerifyCallbackHMAC 校验 OAuth 回调 HMAC 签名
 	VerifyCallbackHMAC(params map[string]string) bool
 }
 
@@ -21,7 +21,7 @@ type shopifyService struct {
 	client *shopify.OAuthClient
 }
 
-// NewShopifyService 创建 Shopify 服务
+// NewShopifyService creates a Shopify service. // NewShopifyService 创建 Shopify 服务
 func NewShopifyService(apiKey, apiSecret string) ShopifyService {
 	return &shopifyService{
 		client: shopify.NewOAuthClient(apiKey, apiSecret),

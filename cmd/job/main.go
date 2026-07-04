@@ -24,7 +24,7 @@ func main() {
 	logger := app.Logger
 	ctx := context.Background()
 
-	// 启动 Kafka 消费者
+	// Start Kafka consumers. // 启动 Kafka 消费者
 	for _, topic := range app.Broker.Topics() {
 		go func(topic string) {
 			logger.Info("start consumer", zap.String("topic", topic))
@@ -34,7 +34,7 @@ func main() {
 		}(topic)
 	}
 
-	// 启动积分过期定时任务，每天凌晨 2 点执行
+	// Start the points expiration cron job, runs daily at 2 AM. // 启动积分过期定时任务，每天凌晨 2 点执行
 	c := cron.New()
 	_, err = c.AddFunc("0 2 * * *", func() {
 		logger.Info("start expire points job")
@@ -48,7 +48,7 @@ func main() {
 	c.Start()
 	logger.Info("cron job started", zap.String("schedule", "0 2 * * *"))
 
-	// 等待退出信号
+	// Wait for exit signal. // 等待退出信号
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit

@@ -15,14 +15,14 @@ import (
 	"time"
 )
 
-// OAuthClient 封装 Shopify OAuth 相关能力
+// OAuthClient encapsulates Shopify OAuth capabilities. // OAuthClient 封装 Shopify OAuth 相关能力
 type OAuthClient struct {
 	apiKey    string
 	apiSecret string
 	httpCli   *http.Client
 }
 
-// NewOAuthClient 创建 Shopify OAuth 客户端
+// NewOAuthClient creates a Shopify OAuth client. // NewOAuthClient 创建 Shopify OAuth 客户端
 func NewOAuthClient(apiKey, apiSecret string) *OAuthClient {
 	return &OAuthClient{
 		apiKey:    apiKey,
@@ -31,7 +31,7 @@ func NewOAuthClient(apiKey, apiSecret string) *OAuthClient {
 	}
 }
 
-// BuildAuthURL 生成 Shopify App 授权安装链接
+// BuildAuthURL generates a Shopify App authorization install URL. // BuildAuthURL 生成 Shopify App 授权安装链接
 func (c *OAuthClient) BuildAuthURL(shop, redirectURI, scopes, state string) string {
 	return fmt.Sprintf(
 		"https://%s/admin/oauth/authorize?client_id=%s&scope=%s&redirect_uri=%s&state=%s",
@@ -43,7 +43,7 @@ func (c *OAuthClient) BuildAuthURL(shop, redirectURI, scopes, state string) stri
 	)
 }
 
-// ExchangeAccessToken 使用授权码换取 Shopify access_token
+// ExchangeAccessToken exchanges an authorization code for a Shopify access_token. // ExchangeAccessToken 使用授权码换取 Shopify access_token
 func (c *OAuthClient) ExchangeAccessToken(ctx context.Context, shop, code string) (string, error) {
 	payload := map[string]string{
 		"client_id":     c.apiKey,
@@ -86,14 +86,14 @@ func (c *OAuthClient) ExchangeAccessToken(ctx context.Context, shop, code string
 	return result.AccessToken, nil
 }
 
-// VerifyCallbackHMAC 校验 Shopify OAuth 回调链接的 HMAC 签名
+// VerifyCallbackHMAC verifies the HMAC signature of a Shopify OAuth callback URL. // VerifyCallbackHMAC 校验 Shopify OAuth 回调链接的 HMAC 签名
 func (c *OAuthClient) VerifyCallbackHMAC(params map[string]string) bool {
 	hmacValue, ok := params["hmac"]
 	if !ok || hmacValue == "" {
 		return false
 	}
 
-	// 除 hmac 外按键排序后拼接成 key=value&key=value
+	// Exclude hmac, sort keys, then join as key=value&key=value pairs. // 除 hmac 外按键排序后拼接成 key=value&key=value
 	keys := make([]string, 0, len(params))
 	for k := range params {
 		if k == "hmac" {
@@ -116,12 +116,12 @@ func (c *OAuthClient) VerifyCallbackHMAC(params map[string]string) bool {
 	return hmac.Equal([]byte(expected), []byte(hmacValue))
 }
 
-// APIKey 返回当前配置的 API Key
+// APIKey returns the currently configured API Key. // APIKey 返回当前配置的 API Key
 func (c *OAuthClient) APIKey() string {
 	return c.apiKey
 }
 
-// APISecret 返回当前配置的 API Secret
+// APISecret returns the currently configured API Secret. // APISecret 返回当前配置的 API Secret
 func (c *OAuthClient) APISecret() string {
 	return c.apiSecret
 }

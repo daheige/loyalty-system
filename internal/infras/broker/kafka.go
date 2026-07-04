@@ -11,13 +11,13 @@ import (
 	"github.com/go-god/broker/gkafka"
 )
 
-// TargetTopic 定义业务类型与 Topic 的映射关系
+// TargetTopic defines the mapping between business types and Topics. // TargetTopic 定义业务类型与 Topic 的映射关系
 type TargetTopic struct {
 	Type  string `mapstructure:"type"`
 	Topic string `mapstructure:"topic"`
 }
 
-// Event 定义忠诚度事件
+// Event defines a loyalty event. // Event 定义忠诚度事件
 type Event struct {
 	Type      string          `json:"type"`
 	ShopID    string          `json:"shop_id"`
@@ -25,13 +25,13 @@ type Event struct {
 	Payload   json.RawMessage `json:"payload"`
 }
 
-// Message 封装订阅到的消息
+// Message wraps a subscribed message. // Message 封装订阅到的消息
 type Message struct {
 	Topic   string
 	Payload []byte
 }
 
-// EventType 定义事件类型
+// EventType defines event types. // EventType 定义事件类型
 const (
 	EventTypeOrderPaid      = "shopify.order.paid"
 	EventTypeReviewCreated  = "review.created"
@@ -43,7 +43,7 @@ const (
 	EventTypePointsExpired  = "points.expired"
 )
 
-// eventCategories 定义事件类型对应的业务分类
+// eventCategories maps event types to business categories. // eventCategories 定义事件类型对应的业务分类
 var eventCategories = map[string]string{
 	EventTypeOrderPaid:      "events",
 	EventTypeReviewCreated:  "events",
@@ -55,7 +55,7 @@ var eventCategories = map[string]string{
 	EventTypeTierDowngraded: "tiers",
 }
 
-// defaultTargetTopics 默认 Topic 映射
+// defaultTargetTopics returns the default topic mapping. // defaultTargetTopics 默认 Topic 映射
 func defaultTargetTopics() map[string]string {
 	return map[string]string{
 		"events": "loyalty.events",
@@ -64,14 +64,14 @@ func defaultTargetTopics() map[string]string {
 	}
 }
 
-// Broker 封装消息队列
+// Broker wraps the message queue. // Broker 封装消息队列
 type Broker struct {
 	broker       godBroker.Broker
 	groupID      string
 	targetTopics map[string]string
 }
 
-// NewBroker 创建 Broker 实例
+// NewBroker creates a Broker instance. // NewBroker 创建 Broker 实例
 func NewBroker(brokers []string, groupID string, targetTopics []TargetTopic) (*Broker, error) {
 	if len(brokers) == 0 {
 		return nil, fmt.Errorf("kafka brokers is empty")
@@ -87,7 +87,7 @@ func NewBroker(brokers []string, groupID string, targetTopics []TargetTopic) (*B
 		topicMap[t.Type] = t.Topic
 	}
 
-	// 默认 Topic 映射，确保未配置时系统仍可运行
+	// Use default topic mapping to ensure the system runs without explicit configuration. // 默认 Topic 映射，确保未配置时系统仍可运行
 	if len(topicMap) == 0 {
 		topicMap = defaultTargetTopics()
 	}
@@ -99,7 +99,7 @@ func NewBroker(brokers []string, groupID string, targetTopics []TargetTopic) (*B
 	}, nil
 }
 
-// ResolveTopic 根据事件类型从配置中解析目标 Topic
+// ResolveTopic resolves the target topic from configuration based on event type. // ResolveTopic 根据事件类型从配置中解析目标 Topic
 func (b *Broker) ResolveTopic(eventType string) string {
 	category, ok := eventCategories[eventType]
 	if !ok {
@@ -117,7 +117,7 @@ func (b *Broker) ResolveTopic(eventType string) string {
 	return "loyalty.events"
 }
 
-// Publish 发布事件到指定 Topic
+// Publish publishes an event to the specified topic. // Publish 发布事件到指定 Topic
 func (b *Broker) Publish(ctx context.Context, topic string, eventType string, shopID string, payload interface{}) error {
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
@@ -144,7 +144,7 @@ func (b *Broker) Publish(ctx context.Context, topic string, eventType string, sh
 	return b.broker.Publish(ctx, topic, eventBytes, opts...)
 }
 
-// Subscribe 订阅指定 Topic 的事件
+// Subscribe subscribes to events from the specified topic. // Subscribe 订阅指定 Topic 的事件
 func (b *Broker) Subscribe(ctx context.Context, topic string, handler func(ctx context.Context, msg Message) error) error {
 	if topic == "" {
 		return fmt.Errorf("topic is empty")
@@ -157,7 +157,7 @@ func (b *Broker) Subscribe(ctx context.Context, topic string, handler func(ctx c
 	return b.broker.Subscribe(ctx, topic, b.groupID, h)
 }
 
-// Topics 返回配置中所有需要去重的 Topic 列表
+// Topics returns a deduplicated list of all configured topics. // Topics 返回配置中所有需要去重的 Topic 列表
 func (b *Broker) Topics() []string {
 	var topics []string
 	seen := make(map[string]struct{})
@@ -171,7 +171,7 @@ func (b *Broker) Topics() []string {
 	return topics
 }
 
-// Close 关闭连接
+// Close closes the connection. // Close 关闭连接
 func (b *Broker) Close() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

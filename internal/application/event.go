@@ -24,7 +24,7 @@ func NewEventHandler(pointSvc PointService, tierSvc TierService, memberSvc Membe
 	}
 }
 
-// ShopifyOrderPaidPayload 支付的订单消息结构体
+// ShopifyOrderPaidPayload is the paid order message struct. // ShopifyOrderPaidPayload 支付的订单消息结构体
 type ShopifyOrderPaidPayload struct {
 	OrderID    string  `json:"order_id"`
 	CustomerID string  `json:"customer_id"`
@@ -73,7 +73,7 @@ func (h *EventService) HandleShopifyOrderPaid(ctx context.Context, event broker.
 	return nil
 }
 
-// MessagePayload 事件message结构体
+// MessagePayload is the event message struct. // MessagePayload 事件message结构体
 type MessagePayload struct {
 	MemberID  uint64 `json:"member_id"`
 	ReviewID  string `json:"review_id"`
@@ -100,7 +100,7 @@ func (h *EventService) HandleReviewCreated(ctx context.Context, event broker.Eve
 	return err
 }
 
-// CheckinPayload check in 消息结构体
+// CheckinPayload is the check-in message struct. // CheckinPayload check in 消息结构体
 type CheckinPayload struct {
 	MemberID uint64 `json:"member_id"`
 	ShopID   string `json:"shop_id"`

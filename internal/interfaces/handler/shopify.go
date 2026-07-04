@@ -9,7 +9,7 @@ import (
 	"github.com/daheige/loyalty-system/internal/interfaces/response"
 )
 
-// ShopifyHandler 处理 Shopify OAuth 安装与回调
+// ShopifyHandler handles Shopify OAuth installation and callbacks. // ShopifyHandler 处理 Shopify OAuth 安装与回调
 type ShopifyHandler struct {
 	svc           application.ShopifyService
 	redirectURI   string
@@ -17,7 +17,7 @@ type ShopifyHandler struct {
 	webhookSecret string
 }
 
-// NewShopifyHandler 创建 Shopify Handler
+// NewShopifyHandler creates a Shopify Handler. // NewShopifyHandler 创建 Shopify Handler
 func NewShopifyHandler(svc application.ShopifyService, redirectURI, scopes, webhookSecret string) *ShopifyHandler {
 	return &ShopifyHandler{
 		svc:           svc,
@@ -27,7 +27,7 @@ func NewShopifyHandler(svc application.ShopifyService, redirectURI, scopes, webh
 	}
 }
 
-// AuthRedirect 生成 Shopify 授权安装链接并重定向
+// AuthRedirect generates a Shopify authorization install URL and redirects. // AuthRedirect 生成 Shopify 授权安装链接并重定向
 func (h *ShopifyHandler) AuthRedirect(c *gin.Context) {
 	shop := c.Query("shop")
 	if shop == "" {
@@ -44,7 +44,7 @@ func (h *ShopifyHandler) AuthRedirect(c *gin.Context) {
 	c.Redirect(http.StatusFound, authURL)
 }
 
-// AuthCallback 处理 Shopify OAuth 回调，校验签名并换取 access_token
+// AuthCallback handles Shopify OAuth callbacks, verifies the signature and exchanges for an access_token. // AuthCallback 处理 Shopify OAuth 回调，校验签名并换取 access_token
 func (h *ShopifyHandler) AuthCallback(c *gin.Context) {
 	shop := c.Query("shop")
 	code := c.Query("code")
@@ -55,7 +55,7 @@ func (h *ShopifyHandler) AuthCallback(c *gin.Context) {
 		return
 	}
 
-	// 收集所有查询参数用于 HMAC 校验
+	// Collect all query parameters for HMAC verification. // 收集所有查询参数用于 HMAC 校验
 	params := make(map[string]string)
 	for k, v := range c.Request.URL.Query() {
 		if len(v) > 0 {
