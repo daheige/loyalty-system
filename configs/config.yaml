@@ -1,0 +1,43 @@
+app:
+  name: loyalty-system
+  env: development
+  port: 8080
+
+database:
+  driver: mysql
+  host: localhost
+  port: 3306
+  username: root
+  password: password
+  database: loyalty_system
+  max_open_conns: 100
+  max_idle_conns: 10
+
+redis:
+  host: localhost
+  port: 6379
+  password: ""
+  db: 0
+
+kafka:
+  brokers:
+    - localhost:9092
+  group_id: loyalty-consumer
+  target_topics:
+    - type: events
+      topic: loyalty.events
+    - type: points
+      topic: loyalty.points
+    - type: tiers
+      topic: loyalty.tiers
+
+shopify:
+  api_key: ${SHOPIFY_API_KEY}
+  api_secret: ${SHOPIFY_API_SECRET}
+  webhook_secret: ${SHOPIFY_WEBHOOK_SECRET}
+  redirect_uri: ${SHOPIFY_REDIRECT_URI:-http://localhost:8080/api/v1/shopify/callback}
+  scopes: ${SHOPIFY_SCOPES:-read_orders,read_customers}
+
+jwt:
+  secret: your-jwt-secret-key
+  expires: 24h

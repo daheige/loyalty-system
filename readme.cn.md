@@ -1,82 +1,82 @@
 # loyalty-system
 
-[中文](readme.cn.md)
+[English](README.md)
 
-Shopify loyalty system backend service, supporting points earning, redemption, tier progression, benefit management, and Shopify Webhook integration.
+Shopify 忠诚度体系后端服务，支持积分赚取、消费、等级晋升、权益管理与 Shopify Webhook 集成。
 
-> Tech Stack: Go 1.26.4 + Gin + GORM + MySQL + Kafka + go-god/broker  
-> Module: `github.com/daheige/loyalty-system`  
-> Version: v1.0  
-> Date: 2026-07-04
-
----
-
-## Table of Contents
-
-1. [Business Analysis](#1-business-analysis)
-2. [Core Features](#2-core-features)
-3. [Architecture](#3-architecture)
-4. [Data Model](#4-data-model)
-5. [Project Structure](#5-project-structure)
-6. [Multi-tenancy](#6-multi-tenancy)
-7. [Configuration](#7-configuration)
-8. [API Reference](#8-api-reference)
-9. [Quick Start](#9-quick-start)
-10. [Docker Deployment](#10-docker-deployment)
-11. [Makefile Commands](#11-makefile-commands)
+> 技术栈：Go 1.26.4 + Gin + GORM + MySQL + Kafka + go-god/broker  
+> 模块：`github.com/daheige/loyalty-system`  
+> 版本：v1.0  
+> 日期：2026-07-04
 
 ---
 
-## 1. Business Analysis
+## 目录
 
-### 1.1 Core Concepts
-
-| Concept | Description |
-|---------|-------------|
-| **Point** | The base currency of the loyalty system; can be earned, spent, and expired |
-| **Tier** | Membership tier based on spending/points (Bronze/Silver/Gold/Platinum) |
-| **Benefit** | Privileges associated with a tier (discounts, free shipping, priority support, etc.) |
-| **Action** | Behaviors that trigger points (purchase, review, share, check-in, etc.) |
-| **Rule** | Calculation rules for earning/spending points |
-| **Transaction** | Records of point balance changes |
-
-### 1.2 Business Scenarios
-
-- **Earn Points**: product purchase, writing reviews, social sharing, daily check-in, birthday rewards
-- **Spend Points**: deduct order amount, redeem coupons, redeem gifts
-- **Tier Progression**: automatic upgrade when cumulative spending/points reach thresholds
-- **Point Expiration**: set point validity period and clean up expired points regularly
-- **Shopify Integration**: receive order events via Webhook and automatically issue points
-
-### 1.3 Key Metrics
-
-- Point earning rate, redemption rate, expiration rate
-- Tier distribution, active member ratio
-- Repurchase rate improvement, average order value improvement
+1. [业务分析](#一业务分析)
+2. [核心特性](#二核心特性)
+3. [架构设计](#三架构设计)
+4. [数据模型](#四数据模型)
+5. [项目结构](#五项目结构)
+6. [多租户设计](#六多租户设计)
+7. [配置文件](#七配置文件)
+8. [API 接口](#八api-接口)
+9. [快速开始](#九快速开始)
+10. [Docker 部署](#十docker-部署)
+11. [Makefile 命令](#十一makefile-命令)
 
 ---
 
-## 2. Core Features
+## 一、业务分析
 
-| Feature | Implementation |
-|---------|----------------|
-| **Point Earning** | Rule engine with multipliers, caps, and validity periods |
-| **Point Spending** | Atomic deduction with balance validation |
-| **Tier System** | Automatic upgrades/downgrades based on points/spending |
-| **Benefit Management** | Tier-bound benefits with per-member benefit records |
-| **Event-driven** | Kafka + go-god/broker async processing |
-| **Shopify Integration** | Webhook receives order events and auto-earns points |
-| **Deduplication** | Idempotency control based on `source_type` + `source_id` |
-| **Point Expiration** | Scheduled jobs scan expired points and handle them automatically |
-| **Graceful Shutdown** | HTTP server + Kafka consumers support graceful shutdown |
-| **Multi-tenancy** | `shop_id` field isolation, supporting independent multi-store operations |
-| **Separation of Concerns** | API service and background Job compiled and deployed independently |
+### 1.1 核心概念
+
+| 概念 | 说明 |
+|------|------|
+| **积分(Point)** | 忠诚度体系的基础货币，可赚取、消费、过期 |
+| **等级(Tier)** | 基于消费金额/积分的会员等级（Bronze/Silver/Gold/Platinum） |
+| **权益(Benefit)** | 等级对应的特权（折扣、免运费、优先客服等） |
+| **行为(Action)** | 触发积分的行为（购买、评价、分享、签到等） |
+| **规则(Rule)** | 积分赚取/消费的计算规则 |
+| **交易(Transaction)** | 积分变动的记录 |
+
+### 1.2 业务场景
+
+- **赚取积分**：购买商品、写评价、社交媒体分享、每日签到、生日奖励
+- **消费积分**：抵扣订单金额、兑换优惠券、兑换礼品
+- **等级晋升**：累计消费/积分达到阈值自动升级
+- **积分过期**：设置积分有效期，定期清理过期积分
+- **Shopify 集成**：通过 Webhook 接收订单事件，自动发放积分
+
+### 1.3 关键指标
+
+- 积分赚取率、兑换率、过期率
+- 等级分布、活跃会员占比
+- 复购率提升、客单价提升
 
 ---
 
-## 3. Architecture
+## 二、核心特性
 
-### 3.1 System Architecture Diagram
+| 特性 | 实现方式 |
+|------|----------|
+| **积分赚取** | 基于规则引擎，支持多倍率、上限、有效期 |
+| **积分消费** | 原子性扣减，支持余额校验 |
+| **等级体系** | 自动升降级，基于积分/消费金额 |
+| **权益管理** | 等级绑定权益，会员独立权益记录 |
+| **事件驱动** | Kafka + go-god/broker 异步处理 |
+| **Shopify 集成** | Webhook 接收订单事件，自动赚取积分 |
+| **防重复** | 基于 `source_type` + `source_id` 幂等控制 |
+| **积分过期** | 定时任务扫描过期积分，自动处理 |
+| **优雅关闭** | HTTP + Kafka 消费者支持 graceful shutdown |
+| **多租户** | `shop_id` 字段隔离，支持多店铺独立运营 |
+| **职责分离** | API 服务与后台 Job 分别编译、独立部署 |
+
+---
+
+## 三、架构设计
+
+### 3.1 系统架构图
 
 ```mermaid
 flowchart TB
@@ -128,7 +128,7 @@ flowchart TB
     H --> K
 ```
 
-### 3.2 Data Flow Diagram
+### 3.2 数据流图
 
 ```mermaid
 sequenceDiagram
@@ -154,25 +154,25 @@ sequenceDiagram
     TierSvc->>Kafka: Publish loyalty.tiers
 ```
 
-### 3.3 Technology Choices
+### 3.3 技术选型
 
-| Component | Choice | Version | Description |
-|-----------|--------|---------|-------------|
-| Web Framework | Gin | v1.12.0 | High-performance HTTP framework |
-| ORM | GORM | v1.31.2 | Auto migration and association queries |
-| Database | MySQL | 8.0 | Primary storage |
-| Cache | Redis | 7.x | Distributed locks and hot data caching |
-| Message Queue | Kafka | 3.x | High-throughput event streaming |
-| Broker SDK | go-god/broker | v1.5.0 | Unified message queue abstraction |
-| Configuration | Viper | v1.21.0 | Environment variables + config files |
-| Logging | Zap | v1.28.0 | Structured logging |
-| Scheduled Tasks | robfig/cron/v3 | v3.0.1 | Point expiration scanning |
+| 组件 | 选型 | 版本 | 说明 |
+|------|------|------|------|
+| Web 框架 | Gin | v1.12.0 | 高性能 HTTP 框架 |
+| ORM | GORM | v1.31.2 | 自动迁移、关联查询 |
+| 数据库 | MySQL | 8.0 | 主存储 |
+| 缓存 | Redis | 7.x | 分布式锁、热点数据缓存 |
+| 消息队列 | Kafka | 3.x | 高吞吐事件流 |
+| Broker SDK | go-god/broker | v1.5.0 | 统一消息队列抽象 |
+| 配置管理 | Viper | v1.21.0 | 环境变量 + 配置文件 |
+| 日志 | Zap | v1.28.0 | 结构化日志 |
+| 定时任务 | robfig/cron/v3 | v3.0.1 | 积分过期扫描 |
 
 ---
 
-## 4. Data Model
+## 四、数据模型
 
-### 4.1 ER Diagram
+### 4.1 ER 图
 
 ```mermaid
 erDiagram
@@ -271,15 +271,15 @@ erDiagram
     }
 ```
 
-### 4.2 Key Entities
+### 4.2 关键实体
 
-Core entity definitions are located in `internal/domain/entity/`:
+核心实体定义位于 `internal/domain/entity/`：
 
 - `Member` / `MemberTier` / `Tier` / `Benefit` / `MemberBenefit`
 - `PointTransaction` / `PointBalance`
 - `PointRule`
 
-See:
+详见：
 
 - `internal/domain/entity/member.go`
 - `internal/domain/entity/point.go`
@@ -287,101 +287,101 @@ See:
 
 ---
 
-## 5. Project Structure
+## 五、项目结构
 
 ```
 loyalty-system/
 ├── cmd/
-│   ├── api/                    # HTTP API entrypoint
+│   ├── api/                    # HTTP API 入口
 │   │   └── main.go
-│   └── job/                    # Background job entrypoint (Kafka consumer + Cron)
+│   └── job/                    # 后台任务入口（Kafka 消费 + Cron）
 │       └── main.go
 ├── configs/
-│   └── config.yaml             # Configuration file
+│   └── config.yaml             # 配置文件
 ├── internal/
-│   ├── domain/                 # Domain layer
-│   │   ├── entity/             # Domain entities
+│   ├── domain/                 # 领域层
+│   │   ├── entity/             # 领域实体
 │   │   │   ├── member.go
 │   │   │   ├── point.go
 │   │   │   └── rule.go
-│   │   └── repository/         # Repository interfaces
+│   │   └── repository/         # 仓储接口
 │   │       ├── member.go
 │   │       ├── point.go
 │   │       ├── tier.go
 │   │       └── rule.go
-│   ├── application/            # Application service layer
+│   ├── application/            # 应用服务层
 │   │   ├── member.go
 │   │   ├── point.go
 │   │   ├── tier.go
 │   │   ├── event.go
-│   │   └── shopify.go          # Shopify application service
-│   ├── infras/                 # Infrastructure layer
-│   │   ├── broker/             # Kafka wrapper
+│   │   └── shopify.go          # Shopify 应用服务
+│   ├── infras/                 # 基础设施层
+│   │   ├── broker/             # Kafka 封装
 │   │   │   └── kafka.go
-│   │   ├── config/             # Config loading
+│   │   ├── config/             # 配置加载
 │   │   │   └── config.go
-│   │   ├── persistence/        # Repository implementations
+│   │   ├── persistence/        # 仓储实现
 │   │   │   ├── member.go
 │   │   │   ├── point.go
 │   │   │   ├── tier.go
 │   │   │   └── rule.go
-│   │   ├── shopify/            # Shopify OAuth/API client
+│   │   ├── shopify/            # Shopify OAuth/API 客户端
 │   │   │   └── oauth.go
-│   │   └── errors/             # Error definitions
-│   ├── interfaces/             # Interface adapter layer
-│   │   ├── handler/            # HTTP handlers
+│   │   └── errors/             # 错误定义
+│   ├── interfaces/             # 接口适配层
+│   │   ├── handler/            # HTTP Handler
 │   │   │   ├── member.go
 │   │   │   ├── point.go
 │   │   │   ├── tier.go
 │   │   │   ├── webhook.go
-│   │   │   └── shopify.go      # Shopify OAuth handler
-│   │   ├── middleware/         # Middleware
+│   │   │   └── shopify.go      # Shopify OAuth Handler
+│   │   ├── middleware/         # 中间件
 │   │   │   ├── auth.go
 │   │   │   └── logger.go
-│   │   ├── response/           # Unified response
-│   │   └── routers/            # Route registration
+│   │   ├── response/           # 统一响应
+│   │   └── routers/            # 路由注册
 │   │       └── router.go
-│   └── providers/              # Dependency injection / bootstrap
+│   └── providers/              # 依赖注入 / 应用启动
 │       └── provider.go
 ├── scripts/
-│   └── init.sql                # Database initialization script
-├── docker-compose.yml          # Docker Compose configuration
-├── Dockerfile                  # API service image
-├── loyalty-job.Dockerfile      # Background Job image
-├── Makefile                    # Build scripts
-├── api.md                      # API interface documentation
-├── shopify_verify.md           # Shopify Webhook signature verification doc
-├── README.md                   # Project documentation
-├── go.mod                      # Go module definition
-└── go.sum                      # Go dependency checksum
+│   └── init.sql                # 数据库初始化脚本
+├── docker-compose.yml          # Docker Compose 配置
+├── Dockerfile                  # API 服务镜像
+├── loyalty-job.Dockerfile      # 后台 Job 镜像
+├── Makefile                    # 构建脚本
+├── api.md                      # API 接口文档
+├── shopify_verify.md           # Shopify Webhook 签名验证文档
+├── README.md                   # 项目说明
+├── go.mod                      # Go 模块定义
+└── go.sum                      # Go 依赖校验
 ```
 
-### 5.1 Layer Descriptions
+### 5.1 分层说明
 
-| Layer | Directory | Responsibility |
-|-------|-----------|----------------|
-| Domain | `internal/domain` | Entities, repository interfaces, business core |
-| Application | `internal/application` | Service orchestration, transactions, event handling |
-| Infrastructure | `internal/infras` | Database, message queue, configuration, error definitions |
-| Interface | `internal/interfaces` | HTTP handlers, middleware, unified response, routing |
-| Bootstrap | `internal/providers` | Dependency injection and lifecycle management |
-
----
-
-## 6. Multi-tenancy
-
-This system adopts a **shared database + shared schema + row-level isolation** multi-tenant architecture, isolated by the `shop_id` field.
-
-| Layer | Strategy | Description |
-|-------|----------|-------------|
-| Data | Row-level isolation | All business tables contain a `shop_id` field; queries are automatically filtered |
-| Cache | Namespace isolation | Redis key prefix: `loyalty:{shop_id}:` |
-| Message | Topic partitioning | Partitioned by `shop_id` to ensure in-order event processing per store |
-| Config | Independent config | Each store has independent point rules and tier configurations |
+| 层级 | 目录 | 职责 |
+|------|------|------|
+| 领域层 | `internal/domain` | 实体、仓储接口，业务核心 |
+| 应用层 | `internal/application` | 服务编排、事务、事件处理 |
+| 基础设施层 | `internal/infras` | 数据库、消息队列、配置、错误定义 |
+| 接口层 | `internal/interfaces` | HTTP Handler、中间件、统一响应、路由 |
+| 启动层 | `internal/providers` | 依赖注入与生命周期管理 |
 
 ---
 
-## 7. Configuration
+## 六、多租户设计
+
+本系统采用 **共享数据库 + 共享 Schema + 数据行隔离** 的多租户架构，通过 `shop_id` 字段实现租户隔离。
+
+| 层级 | 策略 | 说明 |
+|------|------|------|
+| 数据层 | 行级隔离 | 所有业务表包含 `shop_id` 字段，查询自动过滤 |
+| 缓存层 | 命名空间隔离 | Redis Key 前缀：`loyalty:{shop_id}:` |
+| 消息层 | Topic 分区 | 按 `shop_id` 分区，确保同一店铺事件顺序处理 |
+| 配置层 | 独立配置 | 每个店铺独立积分规则、等级配置 |
+
+---
+
+## 七、配置文件
 
 ### 7.1 configs/config.yaml
 
@@ -429,9 +429,9 @@ jwt:
   expires: 24h
 ```
 
-### 7.2 Environment Variable Overrides
+### 7.2 环境变量覆盖
 
-Viper supports automatic environment variable overrides for config files:
+Viper 支持环境变量自动覆盖配置文件：
 
 ```bash
 export APP_ENV=production
@@ -442,39 +442,39 @@ export SHOPIFY_WEBHOOK_SECRET=whsec_xxx
 export JWT_SECRET=jwt-secret-2026
 ```
 
-### 7.3 Kafka Topic Mapping
+### 7.3 Kafka Topic 映射
 
-Kafka topics are dynamically mapped by business type via `target_topics`:
+Kafka 主题通过 `target_topics` 配置，按业务类型动态映射：
 
-| Business Type | Default Topic | Event Examples |
-|---------------|---------------|----------------|
+| 业务类型 | 默认 Topic | 事件示例 |
+|----------|-----------|----------|
 | events | loyalty.events | order.paid, review.created, member.checkin |
 | points | loyalty.points | points.earned, points.spent, points.expired |
 | tiers | loyalty.tiers | tier.upgraded, tier.downgraded |
 
-The Broker provides a `ResolveTopic(eventType)` method to resolve the target topic from the event type, passing the topic explicitly on publish/subscribe.
+Broker 提供 `ResolveTopic(eventType)` 方法根据事件类型解析目标 Topic，发布/订阅时显式传递 Topic。
 
-### 7.4 Shopify Configuration Parameters
+### 7.4 Shopify 配置参数说明
 
-The `shopify` node configures credentials required for integration with Shopify:
+`shopify` 节点用于配置与 Shopify 平台对接所需的凭证：
 
-| Parameter | Description | Typical Length/Format | How to Obtain |
-|-----------|-------------|----------------------|---------------|
-| `api_key` | Shopify App API Key (client identifier) | 32-character hex string | Shopify Partner Dashboard / App settings |
-| `api_secret` | Shopify App API Secret (client secret) | 32-character hex string | Shopify Partner Dashboard / App settings |
-| `webhook_secret` | Key used to verify Shopify Webhook HMAC signature | Recommended ≥32 random chars; Shopify auto-generates 32-character hex strings | Specify when creating the webhook or auto-generated by Shopify |
-| `redirect_uri` | Shopify OAuth redirect URI | URL string, must match App settings | Configure in App whitelist |
-| `scopes` | Shopify OAuth requested permission scopes | Comma-separated permission string | Apply according to business needs |
+| 参数 | 说明 | 典型长度/格式 | 获取方式 |
+|------|------|--------------|----------|
+| `api_key` | Shopify App 的 API Key（客户端标识） | 32 位十六进制字符串 | Shopify Partner Dashboard / App 设置 |
+| `api_secret` | Shopify App 的 API Secret（客户端密钥） | 32 位十六进制字符串 | Shopify Partner Dashboard / App 设置 |
+| `webhook_secret` | 用于校验 Shopify Webhook HMAC 签名的密钥 | 建议 ≥32 位随机字符串；Shopify 自动生成时通常为 32 位十六进制字符串 | 创建 Webhook 时指定或由 Shopify 自动生成 |
+| `redirect_uri` | Shopify OAuth 授权回调地址 | URL 字符串，需与 App 设置一致 | 在 App 设置的白名单中配置 |
+| `scopes` | Shopify OAuth 请求的权限范围 | 逗号分隔的权限字符串 | 根据业务需要申请 |
 
-Notes:
+说明：
 
-- `api_key` and `api_secret` are used together for OAuth, Admin API, and other authentication.
-- `webhook_secret` is used to verify the `X-Shopify-Hmac-Sha256` request header and ensure callbacks come from Shopify.
-- The webhook signature algorithm is **HMAC-SHA256**, computed over the raw request body and placed in the header as **base64**.
-- `redirect_uri` and `scopes` are used to generate the Shopify App installation authorization link and exchange for `access_token`.
-- In production, always inject these sensitive values via environment variables; do not hard-code them in `config.yaml`.
+- `api_key` 与 `api_secret` 成对使用，用于 OAuth、Admin API 等身份认证。
+- `webhook_secret` 用于验证 `X-Shopify-Hmac-Sha256` 请求头，确保回调请求来自 Shopify。
+- Webhook 签名算法为 **HMAC-SHA256**，对原始请求体（raw body）计算摘要，并以 **base64** 编码后放在请求头中。
+- `redirect_uri` 和 `scopes` 用于生成 Shopify App 安装授权链接并换取 `access_token`。
+- 生产环境务必通过环境变量注入这些敏感配置，不要硬编码在 `config.yaml` 中。
 
-Example configuration:
+配置示例：
 
 ```yaml
 shopify:
@@ -487,11 +487,11 @@ shopify:
 
 ---
 
-## 8. API Reference
+## 八、API 接口
 
-### 8.1 Member APIs
+### 8.1 会员接口
 
-#### Register Member
+#### 注册会员
 
 ```http
 POST /api/v1/members
@@ -505,23 +505,23 @@ Authorization: Bearer <token>
 }
 ```
 
-#### Query Member
+#### 查询会员
 
 ```http
 GET /api/v1/members?shop_id=demo-shop.myshopify.com&customer_id=1234567890
 Authorization: Bearer <token>
 ```
 
-#### Paginated Member List
+#### 分页查询会员列表
 
 ```http
 GET /api/v1/members/list?shop_id=demo-shop.myshopify.com&page=1&page_size=20
 Authorization: Bearer <token>
 ```
 
-### 8.2 Point APIs
+### 8.2 积分接口
 
-#### Earn Points
+#### 赚取积分
 
 ```http
 POST /api/v1/points/earn
@@ -539,7 +539,7 @@ Authorization: Bearer <token>
 }
 ```
 
-#### Spend Points
+#### 消费积分
 
 ```http
 POST /api/v1/points/spend
@@ -555,46 +555,46 @@ Authorization: Bearer <token>
 }
 ```
 
-#### Query Point Balance
+#### 查询积分余额
 
 ```http
 GET /api/v1/points/balance/1
 Authorization: Bearer <token>
 ```
 
-#### Query Point Transactions
+#### 查询积分交易记录
 
 ```http
 GET /api/v1/points/transactions/1?page=1&page_size=20
 Authorization: Bearer <token>
 ```
 
-### 8.3 Tier APIs
+### 8.3 等级接口
 
-#### Get All Tiers
+#### 获取所有等级
 
 ```http
 GET /api/v1/tiers
 Authorization: Bearer <token>
 ```
 
-#### Get Member Current Tier
+#### 获取会员当前等级
 
 ```http
 GET /api/v1/tiers/member/1
 Authorization: Bearer <token>
 ```
 
-#### Manual Tier Upgrade Check
+#### 手动检查等级晋升
 
 ```http
 POST /api/v1/tiers/check/1
 Authorization: Bearer <token>
 ```
 
-### 8.4 Webhook APIs
+### 8.4 Webhook 接口
 
-#### Shopify Order Paid Callback
+#### Shopify 订单支付回调
 
 ```http
 POST /webhooks/shopify/order-paid
@@ -614,23 +614,23 @@ X-Shopify-Shop-Domain: demo-shop.myshopify.com
 }
 ```
 
-### 8.5 Shopify OAuth APIs
+### 8.5 Shopify OAuth 接口
 
-#### Initiate Authorization Install
+#### 发起授权安装
 
 ```http
 GET /api/v1/shopify/auth?shop=demo-shop.myshopify.com&state=loyalty-system
 ```
 
-Response: 302 redirect to the Shopify authorization page.
+响应：302 重定向到 Shopify 授权页面。
 
-#### Authorization Callback
+#### 授权回调
 
 ```http
 GET /api/v1/shopify/callback?shop=demo-shop.myshopify.com&code=xxxxx&hmac=xxxxx&state=loyalty-system&timestamp=1234567890
 ```
 
-Response:
+响应：
 
 ```json
 {
@@ -645,114 +645,114 @@ Response:
 }
 ```
 
-Notes:
+说明：
 
-- The callback endpoint verifies the `hmac` signature and exchanges `api_key` + `api_secret` for an `access_token`.
-- The obtained `access_token` can be used for subsequent Shopify Admin API calls (e.g., querying orders, customer details).
-- In production, it is recommended to persist `access_token` to the database rather than returning it directly to the frontend.
+- 回调接口会校验 `hmac` 签名，并使用 `api_key` + `api_secret` 换取 `access_token`。
+- 获取到的 `access_token` 可用于后续调用 Shopify Admin API（如查询订单、客户详情）。
+- 生产环境建议将 `access_token` 持久化到数据库，而不是直接返回给前端。
 
 ---
 
-## 9. Quick Start
+## 九、快速开始
 
-### 9.1 Requirements
+### 9.1 环境要求
 
 - Go 1.26.4+
 - Docker & Docker Compose
 - Make
 
-### 9.2 Start Infrastructure
+### 9.2 启动基础设施
 
 ```bash
-# Start MySQL + Redis + Zookeeper + Kafka
+# 启动 MySQL + Redis + Zookeeper + Kafka
 make docker-up
 
-# Or start only dependency services
+# 或仅启动依赖服务
 make dev
 ```
 
-### 9.3 Initialize Database
+### 9.3 初始化数据库
 
 ```bash
 make migrate
 ```
 
-### 9.4 Start Services
+### 9.4 启动服务
 
 ```bash
-# Start API service
+# 启动 API 服务
 make run
 
-# Or build and run
+# 或构建后运行
 make build-api
 ./bin/loyalty-system
 
-# Start background Job (Kafka consumer + point expiration scheduled task)
+# 启动后台 Job（Kafka 消费 + 积分过期定时任务）
 make run-job
 
-# Or build and run
+# 或构建后运行
 make build-job
 ./bin/loyalty-system-job
 ```
 
-### 9.5 Verify Service
+### 9.5 验证服务
 
 ```bash
 curl http://localhost:8080/health
 ```
 
-### 9.6 Test APIs
+### 9.6 测试接口
 
 ```bash
-# Register member
+# 注册会员
 curl -X POST http://localhost:8080/api/v1/members \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer test-token" \
   -d '{"shop_id": "demo-shop.myshopify.com", "customer_id": "12345", "email": "test@example.com"}'
 
-# Earn points
+# 赚取积分
 curl -X POST http://localhost:8080/api/v1/points/earn \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer test-token" \
   -d '{"member_id": 1, "action_type": "purchase", "amount": 200, "source_type": "order", "source_id": "order_001"}'
 
-# Query balance
+# 查询余额
 curl http://localhost:8080/api/v1/points/balance/1 \
   -H "Authorization: Bearer test-token"
 ```
 
 ---
 
-## 10. Docker Deployment
+## 十、Docker 部署
 
 ### 10.1 Dockerfile
 
-The project provides two independent Dockerfiles:
+项目提供两个独立的 Dockerfile：
 
-| File | Purpose | Build Target |
-|------|---------|--------------|
-| `Dockerfile` | API service image | `./cmd/api` |
-| `loyalty-job.Dockerfile` | Background Job image | `./cmd/job` |
+| 文件 | 用途 | 构建目标 |
+|------|------|----------|
+| `Dockerfile` | API 服务镜像 | `./cmd/api` |
+| `loyalty-job.Dockerfile` | 后台 Job 镜像 | `./cmd/job` |
 
-#### Build and Run API
+#### 构建并运行 API
 
 ```bash
 docker build -t loyalty-system:latest .
 docker run -p 8080:8080 loyalty-system:latest
 ```
 
-#### Build and Run Job
+#### 构建并运行 Job
 
 ```bash
 docker build -f loyalty-job.Dockerfile -t loyalty-system-job:latest .
 docker run loyalty-system-job:latest
 ```
 
-#### Makefile Approach
+#### Makefile 方式
 
 ```bash
-make docker-build       # Build API image
-make docker-build-job   # Build Job image
+make docker-build       # 构建 API 镜像
+make docker-build-job   # 构建 Job 镜像
 ```
 
 ### 10.2 docker-compose.yml
@@ -865,20 +865,20 @@ volumes:
   redis_data:
 ```
 
-> `app` and `job` are split into independent services using `Dockerfile` and `loyalty-job.Dockerfile` respectively, avoiding co-location of API and background tasks.
+> `app` 与 `job` 已拆分为独立服务，分别使用 `Dockerfile` 与 `loyalty-job.Dockerfile`，避免 API 与后台任务混部。
 
-### 10.3 Database Initialization
+### 10.3 数据库初始化
 
-Database schema and default data are in `scripts/init.sql`, including:
+数据库表结构与默认数据见 `scripts/init.sql`，包含：
 
-- Member, point, tier, and benefit tables
-- Default tiers (Bronze/Silver/Gold/Platinum)
-- Default benefit-to-tier bindings
-- Default point rules (purchase, review, check-in, registration, referral)
+- 会员、积分、等级、权益表
+- 默认等级（Bronze/Silver/Gold/Platinum）
+- 默认权益与等级绑定
+- 默认积分规则（购买、评价、签到、注册、推荐）
 
 ---
 
-## 11. Makefile Commands
+## 十一、Makefile 命令
 
 ```makefile
 .PHONY: build build-api build-job run run-job test clean docker-build image docker-up docker-down logs migrate fmt lint swagger deps dev dev-job bench cover help
@@ -889,96 +889,96 @@ GO = go
 
 .DEFAULT_GOAL := help
 
-help: ## Show available commands
+help: ## 显示可用命令
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
-build: build-api build-job ## Compile both api and job binaries
+build: build-api build-job ## 编译 api 与 job 两个二进制
 
-build-api: ## Compile API service
+build-api: ## 编译 API 服务
 	$(GO) build -o bin/$(APP_NAME) ./cmd/api
 
-build-job: ## Compile background Job service
+build-job: ## 编译后台 Job 服务
 	$(GO) build -o bin/$(APP_NAME)-job ./cmd/job
 
-run: ## Run API service in development mode
+run: ## 开发模式运行 API 服务
 	$(GO) run ./cmd/api
 
-run-job: ## Run background Job service in development mode
+run-job: ## 开发模式运行后台 Job 服务
 	$(GO) run ./cmd/job
 
-test: ## Run tests
+test: ## 运行测试
 	$(GO) test -v ./...
 
-clean: ## Clean build artifacts
+clean: ## 清理构建产物
 	rm -rf bin/
 	$(GO) clean
 
-docker-build: ## Build Docker image
+docker-build: ## 构建 Docker 镜像
 	docker build -t $(APP_NAME):latest .
 
-image: docker-build ## Build Docker image (alias)
+image: docker-build ## 构建 Docker 镜像（别名）
 
-docker-up: ## Start all Docker Compose services
+docker-up: ## 启动 Docker Compose 全部服务
 	$(DOCKER_COMPOSE) up -d
 
-docker-down: ## Stop and remove Docker Compose services
+docker-down: ## 停止并移除 Docker Compose 服务
 	$(DOCKER_COMPOSE) down -v
 
-logs: ## View app service logs
+logs: ## 查看 app 服务日志
 	$(DOCKER_COMPOSE) logs -f app
 
-migrate: ## Execute database initialization script
+migrate: ## 执行数据库初始化脚本
 	$(DOCKER_COMPOSE) exec -T mysql mysql -u root -ployalty_pass loyalty_system < scripts/init.sql
 
-fmt: ## Format Go code
+fmt: ## 格式化 Go 代码
 	$(GO) fmt ./...
 
-lint: ## Run golangci-lint
+lint: ## 运行 golangci-lint
 	golangci-lint run ./...
 
-swagger: ## Generate Swagger documentation
+swagger: ## 生成 Swagger 文档
 	swag init -g cmd/api/main.go
 
-deps: ## Tidy and download dependencies
+deps: ## 整理并下载依赖
 	$(GO) mod tidy
 	$(GO) mod download
 
-dev: ## Start infrastructure and run API service
+dev: ## 启动基础设施并运行 API 服务
 	$(DOCKER_COMPOSE) up -d mysql redis zookeeper kafka
 	sleep 10
 	$(GO) run ./cmd/api
 
-dev-job: ## Start infrastructure and run background Job service
+dev-job: ## 启动基础设施并运行后台 Job 服务
 	$(DOCKER_COMPOSE) up -d mysql redis zookeeper kafka
 	sleep 10
 	$(GO) run ./cmd/job
 
-bench: ## Run benchmark tests
+bench: ## 运行基准测试
 	$(GO) test -bench=. -benchmem ./...
 
-cover: ## Generate test coverage report
+cover: ## 生成测试覆盖率报告
 	$(GO) test -coverprofile=coverage.out ./...
 	$(GO) tool cover -html=coverage.out -o coverage.html
 ```
 
 ---
 
-## Appendix: Core Features Summary
+## 附录：核心特性总结
 
-| Feature | Implementation |
-|---------|----------------|
-| **Point Earning** | Rule engine with multipliers, caps, and validity periods |
-| **Point Spending** | Atomic deduction with balance validation |
-| **Tier System** | Automatic upgrades/downgrades based on points/spending |
-| **Benefit Management** | Tier-bound benefits with per-member benefit records |
-| **Event-driven** | Kafka + go-god/broker async processing |
-| **Shopify Integration** | Webhook receives order events and auto-earns points |
-| **Deduplication** | Idempotency control based on `source_type` + `source_id` |
-| **Point Expiration** | Scheduled jobs scan expired points and handle them automatically |
-| **Graceful Shutdown** | HTTP server + Kafka consumers support graceful shutdown |
-| **Multi-tenancy** | `shop_id` field isolation, supporting independent multi-store operations |
-| **API/Job Separation** | `cmd/api` handles HTTP; `cmd/job` handles message consumption and scheduled tasks |
+| 特性 | 实现方式 |
+|------|----------|
+| **积分赚取** | 基于规则引擎，支持多倍率、上限、有效期 |
+| **积分消费** | 原子性扣减，支持余额校验 |
+| **等级体系** | 自动升降级，基于积分/消费金额 |
+| **权益管理** | 等级绑定权益，会员独立权益记录 |
+| **事件驱动** | Kafka + go-god/broker 异步处理 |
+| **Shopify 集成** | Webhook 接收订单事件，自动赚取积分 |
+| **防重复** | 基于 `source_type` + `source_id` 幂等控制 |
+| **积分过期** | 定时任务扫描过期积分，自动处理 |
+| **优雅关闭** | HTTP + Kafka 消费者支持 graceful shutdown |
+| **多租户** | `shop_id` 字段隔离，支持多店铺独立运营 |
+| **API/Job 分离** | `cmd/api` 处理 HTTP，`cmd/job` 处理消息消费与定时任务 |
 
 ---
 
-*Document Version: v1.0 | Last Updated: 2026-07-04*
+*文档版本：v1.0 | 最后更新：2026-07-04*
