@@ -166,6 +166,7 @@ sequenceDiagram
 | Broker SDK | go-god/broker | v1.5.0 | 统一消息队列抽象 |
 | 配置管理 | Viper | v1.21.0 | 环境变量 + 配置文件 |
 | 日志 | Zap | v1.28.0 | 结构化日志 |
+| JWT | golang-jwt/jwt | v5.3.0 | Token 签名（HS256）与声明解析 |
 | 定时任务 | robfig/cron/v3 | v3.0.1 | 积分过期扫描 |
 
 ---
@@ -489,6 +490,26 @@ shopify:
 
 ## 八、API 接口
 
+### 8.0 认证说明
+
+所有 `/api/v1/*` 接口均需 JWT 认证：
+
+```http
+Authorization: Bearer <jwt_token>
+```
+
+JWT token 使用 `configs/config.yaml` 中配置的 `jwt.secret` 进行 **HS256** 签名。Token 中必须包含 `shop_id` 声明以标识租户。
+
+**Token 生成方式：**
+
+```go
+import "github.com/daheige/loyalty-system/internal/interfaces/middleware"
+
+token, _ := middleware.GenerateToken("your-jwt-secret-key", "demo-shop.myshopify.com", 24*time.Hour)
+```
+
+中间件校验项：签名（HMAC-SHA256）、过期时间、算法类型、`shop_id` 非空。校验通过后将 `shop_id` 注入 Gin 上下文供后续 Handler 使用。
+
 ### 8.1 会员接口
 
 #### 注册会员
@@ -704,21 +725,27 @@ curl http://localhost:8080/health
 ### 9.6 测试接口
 
 ```bash
+# JWT token 生成方式 (通过 middleware.GenerateToken 辅助函数):
+# token, err := middleware.GenerateToken("your-jwt-secret-key", "demo-shop.myshopify.com", 24*time.Hour)
+
+# 或直接使用有效 JWT token 请求，中间件校验 HS256 签名及 shop_id 声明:
+TOKEN="eyJ..."  # 替换为有效 JWT
+
 # 注册会员
 curl -X POST http://localhost:8080/api/v1/members \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer test-token" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{"shop_id": "demo-shop.myshopify.com", "customer_id": "12345", "email": "test@example.com"}'
 
 # 赚取积分
 curl -X POST http://localhost:8080/api/v1/points/earn \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer test-token" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{"member_id": 1, "action_type": "purchase", "amount": 200, "source_type": "order", "source_id": "order_001"}'
 
 # 查询余额
 curl http://localhost:8080/api/v1/points/balance/1 \
-  -H "Authorization: Bearer test-token"
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 ---

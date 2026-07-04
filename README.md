@@ -166,6 +166,7 @@ sequenceDiagram
 | Broker SDK | go-god/broker | v1.5.0 | Unified message queue abstraction |
 | Configuration | Viper | v1.21.0 | Environment variables + config files |
 | Logging | Zap | v1.28.0 | Structured logging |
+| JWT | golang-jwt/jwt | v5.3.0 | Token signing (HS256) and claims parsing |
 | Scheduled Tasks | robfig/cron/v3 | v3.0.1 | Point expiration scanning |
 
 ---
@@ -489,6 +490,26 @@ shopify:
 
 ## 8. API Reference
 
+### 8.0 Authentication
+
+All `/api/v1/*` endpoints require JWT authentication:
+
+```http
+Authorization: Bearer <jwt_token>
+```
+
+The JWT token is **HS256** signed using the `jwt.secret` configured in `configs/config.yaml`. The token must contain a `shop_id` claim identifying the tenant.
+
+**Token generation:**
+
+```go
+import "github.com/daheige/loyalty-system/internal/interfaces/middleware"
+
+token, _ := middleware.GenerateToken("your-jwt-secret-key", "demo-shop.myshopify.com", 24*time.Hour)
+```
+
+The middleware validates: signature (HMAC-SHA256), token expiry, algorithm type, and non-empty `shop_id`. After validation, `shop_id` is injected into the Gin context for downstream handlers.
+
 ### 8.1 Member APIs
 
 #### Register Member
@@ -704,21 +725,27 @@ curl http://localhost:8080/health
 ### 9.6 Test APIs
 
 ```bash
+# Generate a JWT token (using the GenerateToken helper from middleware):
+# token, err := middleware.GenerateToken("your-jwt-secret-key", "demo-shop.myshopify.com", 24*time.Hour)
+
+# Or directly request, the middleware uses HS256 signed token with shop_id claim:
+TOKEN="eyJ..."  # replace with a valid JWT
+
 # Register member
 curl -X POST http://localhost:8080/api/v1/members \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer test-token" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{"shop_id": "demo-shop.myshopify.com", "customer_id": "12345", "email": "test@example.com"}'
 
 # Earn points
 curl -X POST http://localhost:8080/api/v1/points/earn \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer test-token" \
+  -H "Authorization: Bearer $TOKEN" \
   -d '{"member_id": 1, "action_type": "purchase", "amount": 200, "source_type": "order", "source_id": "order_001"}'
 
 # Query balance
 curl http://localhost:8080/api/v1/points/balance/1 \
-  -H "Authorization: Bearer test-token"
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 ---

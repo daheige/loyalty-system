@@ -5,6 +5,7 @@ go 1.26.4
 require (
 	github.com/gin-gonic/gin v1.12.0
 	github.com/go-god/broker v1.5.0
+	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/viper v1.21.0
 	go.uber.org/zap v1.28.0
